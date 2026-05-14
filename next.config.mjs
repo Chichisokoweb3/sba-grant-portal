@@ -4,9 +4,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,   // optional, but avoids lint errors during build
-  },
 };
 
 export default nextConfig;

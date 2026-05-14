@@ -32,26 +32,20 @@ export default function ApplyGrant() {
       return
     }
     setUploading(true)
-    // Upload ID to Supabase Storage
     const fileExt = idFile.name.split('.').pop()
     const fileName = `${user.id}-${Date.now()}.${fileExt}`
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('documents')
       .upload(`ids/${fileName}`, idFile)
-
     if (uploadError) {
       setMessage('Upload failed: ' + uploadError.message)
       setUploading(false)
       return
     }
-
-    // Get public URL
     const { data: urlData } = supabase.storage
       .from('documents')
       .getPublicUrl(`ids/${fileName}`)
     const idUrl = urlData.publicUrl
-
-    // Insert application
     const { error: insertError } = await supabase.from('grant_applications').insert({
       user_id: user.id,
       grant_amount: form.grantAmount,
@@ -61,12 +55,10 @@ export default function ApplyGrant() {
       routing_number: form.routingNumber,
       status: 'pending'
     })
-
     if (insertError) {
       setMessage('Submission error: ' + insertError.message)
     } else {
       setMessage('Application submitted! Check your customer portal for status.')
-      // Clear form
     }
     setUploading(false)
   }
@@ -105,4 +97,34 @@ export default function ApplyGrant() {
             <label className="block font-medium">Account Number</label>
             <input required className="w-full border p-2 rounded" value={form.accountNumber}
               onChange={e => setForm({...form, accountNumber: e.target.value})} />
-     
+          </div>
+          <div>
+            <label className="block font-medium">Routing Number</label>
+            <input required className="w-full border p-2 rounded" value={form.routingNumber}
+              onChange={e => setForm({...form, routingNumber: e.target.value})} />
+          </div>
+          <div>
+            <label className="block font-medium">Upload ID (Driver’s License / Passport – max 5MB)</label>
+            <input type="file" accept="image/*" required className="w-full border p-2 rounded"
+              onChange={e => {
+                const file = e.target.files[0]
+                if (file && file.size > 5 * 1024 * 1024) {
+                  setMessage('File too large. Max 5MB.')
+                  return
+                }
+                setIdFile(file)
+              }} />
+          </div>
+          <button type="submit" disabled={uploading}
+            className="w-full bg-blue-700 text-white p-3 rounded-lg font-semibold hover:bg-blue-800">
+            {uploading ? 'Submitting...' : 'Submit Application'}
+          </button>
+          {message && <p className="text-center text-sm text-green-700">{message}</p>}
+        </form>
+        <button onClick={() => router.push('/dashboard')} className="mt-4 text-blue-600 underline">
+          ← Back to selection
+        </button>
+      </div>
+    </div>
+  )
+}
